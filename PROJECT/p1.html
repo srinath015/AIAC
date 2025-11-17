@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SRAAP University Attendance Portal — Final </title>
+<style>
+  :root{--brand:#002855;--accent:#133654;--muted:#f4f6fb}
+  body{font-family:Inter,system-ui,Segoe UI,Roboto,"Poppins",sans-serif;margin:0;background:#63a4f5;color:#111}
+  header{background:var(--brand);color:#ead4d4;padding:18px;text-align:center;font-size:22px;font-weight:600;box-shadow:0 3px 8px rgba(0,0,0,.15)}
+  .wrap{width:95%;max-width:1100px;margin:24px auto}
+  .card{background:#fff;border-radius:10px;padding:18px;box-shadow:0 6px 20px rgba(2,8,23,.06);margin-bottom:18px}
+  label{display:block;font-weight:600;margin:8px 0 6px}
+  select,input,textarea,button{width:100%;padding:11px;border:2px solid #000000;border-radius:18px;font-size:14px;box-sizing:border-box}
+  button{background:var(--brand);color:#faf8f8;border:none;cursor:pointer;padding:10px 12px}
+  button.ghost{background:#f5f5f5;color:var(--brand);border:1px solid var(--brand)}
+  .row{display:flex;gap:12px}
+  .col{flex:1}
+  table{width:100%;border-collapse:collapse;margin-top:12px}
+  th,td{border:1px solid #e1e7ee;padding:8px;text-align:center;font-size:14px}
+  th{background:var(--brand);color:#fff}
+  .summary{background:var(--muted);padding:12px;border-radius:8px;margin-top:12px;border-left:5px solid var(--brand)}
+  .big-perc{font-size:48px;font-weight:800;color:var(--brand);text-align:center;padding:10px}
+  .warning{background:#edebea;border-left:4px solid #ff6b6b;padding:10px;margin-top:10px;border-radius:6px}
+  .success{background:#f1fbf4;border-left:4px solid #1fab4b;padding:10px;margin-top:10px;border-radius:6px}
+  .small{font-size:13px;color:#666}
+  .flex-between{display:flex;justify-content:space-between;align-items:center}
+  .requests-list{max-height:220px;overflow:auto}
+  textarea{min-height:80px}
+  .center{text-align:center}
+  .muted{color:#666;font-size:13px}
+  .hidden{display:none}
+  .btn-inline{display:inline-block;padding:6px 10px;border-radius:6px;margin:2px;background:#fff;color:var(--brand);border:1px solid var(--brand);cursor:pointer}
+  @media (max-width:820px){ .row{flex-direction:column} }
+  .small-actions{display:flex;gap:8px;align-items:center}
+</style>
+</head>
+<body>
+<header><b><u>University Attendance Portal — Final Prototype</u></b></header>
+<div class="wrap">
+
+  <!-- LOGIN CARD -->
+  <div id="loginCard" class="card">
+    <h2 class="center"><u>Login</u></h2>
+    <label><b>Role</b></label>
+    <select id="roleSelect">
+      <option value="student">Student</option>
+      <option value="faculty">Faculty</option>
+      <option value="admin">Admin</option>
+    </select>
+
+    <label><b>Username</b></label>
+    <input id="loginUsername" placeholder="e.g. cse_batch1_student1 or sunny">
+
+    <label><b>Password</b></label>
+    <input id="loginPassword" type="password" placeholder="password">
+
+    <div class="row" style="margin-top:8px">
+      <div class="col"><button onclick="doLogin()">Login</button></div>
+      <div class="col"><button class="ghost" onclick="showSampleCredentials()">Show sample creds</button></div>
+    </div>
+    <p id="loginError" class="muted"></p>
+  </div>
+
+  <!-- ADMIN VIEW -->
+  <div id="adminView" class="card hidden">
+    <div class="flex-between">
+      <h2>Admin Dashboard</h2>
+      <div><button onclick="logout()">Logout</button></div>
+    </div>
+    <p class="small">Data stored in localStorage. Use admin to export or reset demo data.</p>
+    <div class="row">
+      <div class="col">
+        <label>Export attendance JSON</label>
+        <button onclick="exportData()">Export Attendance</button>
+      </div>
+      <div class="col">
+        <label>Reset demo data</label>
+        <button class="ghost" onclick="initDemo(true)">Reset Demo Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FACULTY VIEW -->
+  <div id="facultyView" class="card hidden">
+    <div class="flex-between">
+      <div>
+        <h2>Faculty Dashboard</h2>
+        <div id="facultyWelcome" class="small muted"></div>
+      </div>
+      <div><button onclick="logout()">Logout</button></div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>Department</label>
+        <select id="facultyDept"></select>
+      </div>
+      <div class="col">
+        <label>Batch</label>
+        <select id="facultyBatch"></select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>Subject</label>
+        <input id="facultySubject" placeholder="DBMS / JAVA / DSA">
+      </div>
+      <div class="col">
+        <label>Hour slots (Ctrl/Shift to pick multiple)</label>
+        <!-- multi-select hour slots like 9-10,10-11,... -->
+        <select id="facultyHour" multiple size="4"></select>
+      </div>
+    </div>
+
+    <label>Topic discussed</label>
+    <input id="facultyTopic" placeholder="Enter topic for today's class">
+
+    <label>Select Date</label>
+    <input id="facultyDate" type="date">
+
+    <h3 style="margin-top:12px">Students (mark Present / Absent)</h3>
+    <div class="small-actions" style="margin-bottom:8px">
+      <button class="ghost" onclick="markAllPresent()">Mark All Present</button>
+      <button class="ghost" onclick="markAllAbsent()">Mark All Absent</button>
+      <div class="muted" style="margin-left:auto">Tip: Hold Ctrl/Cmd or Shift to select multiple hour slots</div>
+    </div>
+    <div style="max-height:420px;overflow:auto;border:1px solid #e6eef8;padding:8px;border-radius:8px">
+      <table id="facultyStudentsTable">
+        <thead><tr><th>Roll</th><th>Name</th><th>Status</th></tr></thead>
+        <tbody id="facultyStudentsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="row" style="margin-top:12px">
+      <div class="col"><button id="submitAttendanceBtn" onclick="submitAttendance()">Submit Attendance</button></div>
+      <div class="col"><button id="loadSavedBtn" class="ghost" onclick="loadSavedForEdit()">Load Saved / Modify</button></div>
+    </div>
+
+    <div id="postSubmitSummary" class="summary hidden"></div>
+
+    <h3 style="margin-top:16px">Pending Correction Requests (for you)</h3>
+    <div class="requests-list" id="facultyRequestsBox"></div>
+  </div>
+
+  <!-- STUDENT VIEW -->
+  <div id="studentView" class="card hidden">
+    <div class="flex-between">
+      <div>
+        <h2>Student Dashboard</h2>
+        <div id="studentWelcome" class="small muted"></div>
+      </div>
+      <div><button onclick="logout()">Logout</button></div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <div class="big-perc" id="studentPercentage">--%</div>
+        <div id="studentPercMsg" class="center muted"></div>
+      </div>
+      <div class="col">
+        <label>Attendance details (recent entries)</label>
+        <div style="max-height:260px;overflow:auto;border:1px solid #e6eef8;padding:8px;border-radius:8px">
+          <table id="studentRecordsTable">
+            <thead><tr><th>Date</th><th>Subject</th><th>Hour</th><th>Status</th><th>Faculty</th><th>Action</th></tr></thead>
+            <tbody id="studentRecordsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <h4 style="margin-top:12px">Your Requests (status)</h4>
+    <div id="studentRequestsList" style="max-height:160px;overflow:auto;border:1px solid #e6eef8;padding:8px;border-radius:8px"></div>
+  </div>
+
+</div>
+
+<script>
+/* -----------------------------
+  Data structures in localStorage:
+  STUDENTS: { id, username, password, name, dept, batchIndex, batchLabel }
+  FACULTIES: { username, password, name, department }
+  ATTENDANCE: { id, date, department, batchLabel, batchIndex, subject, hourSlot, topic, facultyName, studentId, studentName, status, submittedAt }
+  REQUESTS: { id, attendanceId, studentId, studentName, facultyName, department, date, subject, hourSlot, reason, dateCreated, status, responseMessage }
+------------------------------ */
+
+const LS = {
+  STUDENTS: 'sr_students_vfinal',
+  FACULTIES: 'sr_faculties_vfinal',
+  ATTENDANCE: 'sr_attendance_vfinal',
+  REQUESTS: 'sr_requests_vfinal'
+};
+
+/* ---------- Demo initialization ---------- */
+function initDemo(reset=false){
+  if(reset){
+    localStorage.removeItem(LS.STUDENTS);
+    localStorage.removeItem(LS.FACULTIES);
+    localStorage.removeItem(LS.ATTENDANCE);
+    localStorage.removeItem(LS.REQUESTS);
+  }
+
+  if (!localStorage.getItem(LS.FACULTIES)) {
+    const facs = [
+      { username: 'sunny', password: 'sru', name: 'Sunny', department: 'CSE' },
+      { username: 'rk', password: 'sru', name: 'RK', department: 'ECE' },
+      { username: 'srinath', password: 'sru', name: 'Srinath', department: 'EEE' },
+      { username: 'shiva', password: 'sru', name: 'Shiva', department: 'MECH' }
+    ];
+    localStorage.setItem(LS.FACULTIES, JSON.stringify(facs));
+  }
+
+  if(!localStorage.getItem(LS.STUDENTS)){
+    const students = [];
+    let idC = 1001;
+    // CSE: 30 batches
+    for(let b=1;b<=30;b++){
+      for(let s=1;s<=30;s++){
+        const username = `cse_batch${b}_student${s}`;
+        students.push({
+          id: 'S'+(idC++),
+          username,
+          password:'sru',
+          name: `CSE_S${s}_B${b}`,
+          dept:'CSE',
+          batchIndex:b,
+          batchLabel:`CSE-Batch-${b}`
+        });
+      }
+    }
+    // Others: 15 batches each
+    const other = ['ECE','EEE','MECH','CIVIL'];
+    for(const dept of other){
+      for(let b=1;b<=15;b++){
+        for(let s=1;s<=30;s++){
+          const username = `${dept.toLowerCase()}_batch${b}_student${s}`;
+          students.push({
+            id: 'S'+(idC++),
+            username,
+            password:'sru',
+            name: `${dept}_S${s}_B${b}`,
+            dept,
+            batchIndex:b,
+            batchLabel:`${dept}-Batch-${b}`
+          });
+        }
+      }
+    }
+    localStorage.setItem(LS.STUDENTS, JSON.stringify(students));
+  }
+  if(!localStorage.getItem(LS.ATTENDANCE)) localStorage.setItem(LS.ATTENDANCE, JSON.stringify([]));
+  if(!localStorage.getItem(LS.REQUESTS)) localStorage.setItem(LS.REQUESTS, JSON.stringify([]));
+}
+initDemo();
+
+/* ---------- Helpers ---------- */
+function load(key){ return JSON.parse(localStorage.getItem(key) || 'null') }
+function save(key,val){ localStorage.setItem(key, JSON.stringify(val)) }
+function uid(prefix='id'){ return prefix + '_' + Math.random().toString(36).slice(2,9) }
+function todayISO(){ return new Date().toISOString().slice(0,10) }
+
+/* ---------- App state ---------- */
+let currentRole = null;
+let currentUser = null; // student or faculty object or admin {username: 'admin'}
+
+/* ---------- UI helpers ---------- */
+function hideAllCards(){ document.querySelectorAll('.card').forEach(c => c.classList.add('hidden')); }
+function showCard(id){ hideAllCards(); document.getElementById(id).classList.remove('hidden'); }
+function logout(){ currentUser = null; currentRole = null; document.getElementById('loginUsername').value=''; document.getElementById('loginPassword').value=''; document.getElementById('loginError').innerText=''; showCard('loginCard'); }
+
+/* ---------- sample creds ---------- */
+function showSampleCredentials(){
+  alert(
+`Sample logins:
+Admin: admin / sruadmin
+Faculty (pw = sru): sunny, rk, srinath, shiva
+Students (pw = sru):
+  - CSE: cse_batch1_student1 ... cse_batch30_student30
+  - ECE: ece_batch1_student1 ... ece_batch15_student30
+Example: cse_batch1_student1 / sru`
+  );
+}
+
+/* ---------- Login ---------- */
+function doLogin(){
+  const role = document.getElementById('roleSelect').value;
+  const uname = (document.getElementById('loginUsername').value || '').trim();
+  const pass = (document.getElementById('loginPassword').value || '').trim();
+  document.getElementById('loginError').innerText = '';
+
+  if(role === 'admin'){
+    if(uname === 'admin' && pass === 'sruadmin'){
+      currentRole = 'admin'; currentUser = { username:'admin' };
+      showAdmin();
+    } else document.getElementById('loginError').innerText = 'Invalid admin credentials';
+    return;
+  }
+
+  if(role === 'faculty'){
+    const facs = load(LS.FACULTIES) || [];
+    const f = facs.find(x => x.username === uname && x.password === pass);
+    if(!f) { document.getElementById('loginError').innerText = 'Invalid faculty credentials'; return; }
+    currentRole = 'faculty'; currentUser = f; showFaculty();
+    return;
+  }
+
+  if(role === 'student'){
+    const studs = load(LS.STUDENTS) || [];
+    const s = studs.find(x => x.username === uname && x.password === pass);
+    if(!s) { document.getElementById('loginError').innerText = 'Invalid student credentials'; return; }
+    currentRole = 'student'; currentUser = s; showStudent();
+    return;
+  }
+}
+
+/* ---------- Admin ---------- */
+function showAdmin(){ showCard('adminView'); }
+
+/* ---------- Faculty UI ---------- */
+function showFaculty(){
+  showCard('facultyView');
+  document.getElementById('facultyWelcome').innerText = `${currentUser.name} — Dept: ${currentUser.department}`;
+  // fill dept select
+  const depts = ['CSE','ECE','EEE','MECH','CIVIL'];
+  const deptSel = document.getElementById('facultyDept');
+  deptSel.innerHTML = ''; depts.forEach(d => deptSel.innerHTML += `<option>${d}</option>`);
+  deptSel.value = currentUser.department || 'CSE';
+  populateBatchOptions();
+  populateHourSlots();
+  document.getElementById('facultyDate').value = todayISO();
+  loadFacultyStudentsTable();
+  refreshFacultyRequests();
+}
+
+function populateBatchOptions(){
+  const dept = document.getElementById('facultyDept').value;
+  const batches = document.getElementById('facultyBatch');
+  batches.innerHTML = '';
+  const count = (dept === 'CSE') ? 30 : 15;
+  for(let i=1;i<=count;i++){ batches.innerHTML += `<option value="${i}">${dept} - Batch ${i}</option>`; }
+}
+
+function populateHourSlots(){
+  const slotSel = document.getElementById('facultyHour');
+  slotSel.innerHTML = '';
+  // create slots: 9-10 ... 15-16
+  const start = 9, end = 15;
+  for(let h = start; h <= end; h++){
+    const next = h+1;
+    slotSel.innerHTML += `<option value="${h}-${next}">${h}-${next}</option>`;
+  }
+}
+
+document.getElementById('facultyDept').addEventListener('change', ()=>{ populateBatchOptions(); loadFacultyStudentsTable(); });
+document.getElementById('facultyBatch').addEventListener('change', loadFacultyStudentsTable);
+document.getElementById('facultyDate').addEventListener('change', loadFacultyStudentsTable);
+
+function loadFacultyStudentsTable(){
+  const dept = document.getElementById('facultyDept').value;
+  const batchIndex = parseInt(document.getElementById('facultyBatch').value || '1');
+  const students = load(LS.STUDENTS) || [];
+  const filtered = students.filter(s => s.dept === dept && s.batchIndex === batchIndex);
+  const tbody = document.getElementById('facultyStudentsBody');
+  tbody.innerHTML = '';
+  if(filtered.length === 0){ tbody.innerHTML = `<tr><td colspan="3">No students found</td></tr>`; return; }
+  filtered.forEach(st => {
+    tbody.innerHTML += `<tr>
+      <td>${st.id}</td>
+      <td>${st.name}</td>
+      <td>
+        <select id="status_${st.id}">
+          <option>Present</option><option>Absent</option>
+        </select>
+      </td>
+    </tr>`;
+  });
+  document.getElementById('postSubmitSummary').classList.add('hidden');
+}
+
+/* ---------- Mark all helpers ---------- */
+function markAllPresent(){
+  const tbody = document.getElementById('facultyStudentsBody');
+  const selects = tbody.querySelectorAll('select');
+  selects.forEach(s => { s.value = 'Present'; });
+}
+function markAllAbsent(){
+  const tbody = document.getElementById('facultyStudentsBody');
+  const selects = tbody.querySelectorAll('select');
+  selects.forEach(s => { s.value = 'Absent'; });
+}
+
+/* ---------- Submit attendance (handles multiple hour slots) ---------- */
+function submitAttendance(){
+  const date = document.getElementById('facultyDate').value;
+  const subject = (document.getElementById('facultySubject').value || '').trim();
+  const hourSel = document.getElementById('facultyHour');
+  const selectedOptions = Array.from(hourSel.selectedOptions).map(o => o.value);
+  const topic = (document.getElementById('facultyTopic').value || '').trim();
+  const dept = document.getElementById('facultyDept').value;
+  const batchIndex = parseInt(document.getElementById('facultyBatch').value);
+  const facultyName = currentUser.name;
+
+  if(!date){ alert('Choose date'); return; }
+  if(!subject){ alert('Enter subject'); return; }
+  if(selectedOptions.length === 0){ alert('Choose at least one hour slot (e.g. 10-11)'); return; }
+
+  // confirm if multiple hours selected
+  if(selectedOptions.length > 1){
+    if(!confirm(`You selected ${selectedOptions.length} hour slots (${selectedOptions.join(', ')}). This will create attendance entries for each slot. Proceed?`)) return;
+  }
+
+  // edit lock (same-day until 23:00)
+  const now = new Date();
+  const cut = new Date(date + 'T23:00:00');
+  if(now > cut){ alert('Cannot submit or modify after 11:00 PM of the selected date'); return; }
+
+  const students = load(LS.STUDENTS) || [];
+  const batchLabel = (dept === 'CSE') ? `CSE-Batch-${batchIndex}` : `${dept}-Batch-${batchIndex}`;
+  const filtered = students.filter(s => s.dept === dept && s.batchIndex === batchIndex);
+  if(filtered.length === 0){ alert('No students in this batch'); return; }
+
+  let attendance = load(LS.ATTENDANCE) || [];
+  const submittedAt = new Date().toISOString();
+
+  const overallPresent = {}, overallAbsent = {};
+  // For each selected hour slot, remove prior entries and add new ones
+  selectedOptions.forEach(hourSlot => {
+    // remove existing records for that hourSlot + other keys for same faculty
+    attendance = attendance.filter(a => !(a.date===date && a.department===dept && a.batchLabel===batchLabel && a.subject===subject && a.hourSlot===hourSlot && a.facultyName===facultyName));
+    filtered.forEach(st => {
+      const sel = document.getElementById('status_' + st.id);
+      const status = sel ? sel.value : 'Absent';
+      const rec = {
+        id: uid('att'),
+        date, department: dept, batchLabel, batchIndex,
+        subject, hourSlot, topic, facultyName,
+        studentId: st.id, studentName: st.name,
+        status, submittedAt
+      };
+      attendance.push(rec);
+      // accumulate for summary per hour slot
+      if(status === 'Present') (overallPresent[hourSlot] = overallPresent[hourSlot] || []).push(`${st.id} — ${st.name}`);
+      else (overallAbsent[hourSlot] = overallAbsent[hourSlot] || []).push(`${st.id} — ${st.name}`);
+    });
+  });
+
+  save(LS.ATTENDANCE, attendance);
+
+  // Build summary text showing per slot counts
+  let summaryHTML = `<strong>Attendance Submitted</strong><br>Date: ${date} &nbsp; Subject: ${subject}<br>
+    Topic: ${topic || '(none)'}<br>Submitted at: ${new Date(submittedAt).toLocaleString()}<br><br>`;
+  selectedOptions.forEach(slot => {
+    const pres = overallPresent[slot] ? overallPresent[slot].length : 0;
+    const abs = overallAbsent[slot] ? overallAbsent[slot].length : 0;
+    summaryHTML += `<strong>Slot ${slot}</strong><br>✅ Present (${pres})<br>${(overallPresent[slot]||[]).join('<br>')}<br><br>`;
+    summaryHTML += `❌ Absent (${abs})<br>${(overallAbsent[slot]||[]).join('<br>')}<br><hr>`;
+  });
+
+  const sbox = document.getElementById('postSubmitSummary');
+  sbox.innerHTML = summaryHTML;
+  sbox.classList.remove('hidden');
+
+  // refresh requests visible to faculty
+  refreshFacultyRequests();
+  alert('Attendance saved and summary shown.');
+}
+
+/* ---------- Load saved attendance for modification (works per first selected slot if multiple selected) ---------- */
+function loadSavedForEdit(){
+  const date = document.getElementById('facultyDate').value;
+  const subject = (document.getElementById('facultySubject').value || '').trim();
+  const hourSel = document.getElementById('facultyHour');
+  const selectedOptions = Array.from(hourSel.selectedOptions).map(o => o.value);
+  const dept = document.getElementById('facultyDept').value;
+  const batchIndex = parseInt(document.getElementById('facultyBatch').value);
+  if(!date || !subject || selectedOptions.length === 0){ alert('Select date, subject, and hour slot(s) before loading saved attendance'); return; }
+
+  // we'll prefill using the first selected slot (inform user)
+  const firstSlot = selectedOptions[0];
+  if(selectedOptions.length > 1) alert(`Multiple slots selected. Load/Modify will prefill using the first selected slot: ${firstSlot}. You can change other slots by selecting them and resubmitting.`);
+
+  const batchLabel = (dept === 'CSE') ? `CSE-Batch-${batchIndex}` : `${dept}-Batch-${batchIndex}`;
+  const attendance = load(LS.ATTENDANCE) || [];
+  const saved = attendance.filter(a => a.date===date && a.department===dept && a.batchLabel===batchLabel && a.subject===subject && a.hourSlot===firstSlot && a.facultyName===currentUser.name);
+
+  if(saved.length === 0){ alert('No saved attendance for this date/subject/slot'); return; }
+
+  // edit lock
+  const now = new Date();
+  const cut = new Date(date + 'T23:00:00');
+  if(now > cut){ alert('Cannot modify after 11:00 PM of that date'); return; }
+
+  // prefill selects
+  saved.forEach(r => {
+    const sel = document.getElementById('status_' + r.studentId);
+    if(sel) sel.value = r.status;
+  });
+  alert('Saved attendance loaded for modification (for slot ' + firstSlot + '). Update statuses and click Submit.');
+}
+
+/* ---------- Student UI ---------- */
+function showStudent(){
+  showCard('studentView');
+  document.getElementById('studentWelcome').innerText = `${currentUser.name} — ${currentUser.dept} — ${currentUser.batchLabel}`;
+  renderStudentRecordsAndPercentage();
+  renderStudentRequests();
+}
+
+function renderStudentRecordsAndPercentage(){
+  const attendance = load(LS.ATTENDANCE) || [];
+  // include multi-slot records; sort by submittedAt descending
+  const my = attendance.filter(a => a.studentId === currentUser.id).sort((a,b)=> b.submittedAt.localeCompare(a.submittedAt));
+  const tbody = document.getElementById('studentRecordsBody');
+  tbody.innerHTML = '';
+  if(my.length === 0) tbody.innerHTML = '<tr><td colspan="6">No attendance records</td></tr>';
+  // For percentage compute unique class keys (date|subject|hourSlot) and present count
+  const keys = {}; let present = 0;
+  my.forEach(r => {
+    const k = r.date + '||' + r.subject + '||' + r.hourSlot;
+    if(!keys[k]){ keys[k] = true; if(r.status === 'Present') present++; }
+  });
+  const total = Object.keys(keys).length;
+  const perc = total === 0 ? 0 : Math.round((present/total)*100);
+  document.getElementById('studentPercentage').innerText = perc + '%';
+  if(perc <= 75){
+    document.getElementById('studentPercMsg').innerHTML = `<div class="warning">⚠ Your attendance is ${perc}%. You may be in trouble (≤75%).</div>`;
+  } else {
+    document.getElementById('studentPercMsg').innerHTML = `<div class="success">✓ Your attendance is ${perc}%. Keep it up.</div>`;
+  }
+
+  // render rows with 'Request Correction' for absent entries (if not already requested)
+  const requests = load(LS.REQUESTS) || [];
+  my.forEach(r => {
+    const existing = requests.find(req => req.attendanceId === r.id && req.studentId === currentUser.id);
+    const actionHTML = (r.status === 'Absent') ?
+      (existing ? `<span class="small">Request: ${existing.status}</span>` :
+       `<button class="btn-inline" onclick="openRequestDialog('${r.id}')">Request Correction</button>`) :
+      '';
+    tbody.innerHTML += `<tr>
+      <td>${r.date}</td>
+      <td class="small">${r.subject}</td>
+      <td>${r.hourSlot}</td>
+      <td>${r.status}</td>
+      <td>${r.facultyName}</td>
+      <td>${actionHTML}</td>
+    </tr>`;
+  });
+}
+
+/* ---------- Student: open a dialog to create a request for a specific attendance ---------- */
+function openRequestDialog(attendanceId){
+  const attendance = load(LS.ATTENDANCE) || [];
+  const rec = attendance.find(a => a.id === attendanceId);
+  if(!rec){ alert('Attendance record not found'); return; }
+  const reason = prompt(`Request correction for ${rec.date} - ${rec.subject} (Slot ${rec.hourSlot}) taught by ${rec.facultyName}.\n\nEnter reason/message:`);
+  if(reason === null) return; // cancelled
+  const trimmed = (reason || '').trim();
+  if(!trimmed){ alert('Reason required'); return; }
+
+  const requests = load(LS.REQUESTS) || [];
+  const req = {
+    id: uid('req'),
+    attendanceId: rec.id,
+    studentId: currentUser.id,
+    studentName: currentUser.name,
+    facultyName: rec.facultyName,
+    department: rec.department,
+    date: rec.date,
+    subject: rec.subject,
+    hourSlot: rec.hourSlot,
+    reason: trimmed,
+    dateCreated: new Date().toISOString(),
+    status: 'Pending',
+    responseMessage: ''
+  };
+  requests.push(req);
+  save(LS.REQUESTS, requests);
+  alert('Request submitted to ' + rec.facultyName + '. They will see it in their dashboard.');
+  renderStudentRecordsAndPercentage();
+  renderStudentRequests();
+}
+
+/* ---------- Student: render own requests ---------- */
+function renderStudentRequests(){
+  const requests = load(LS.REQUESTS) || [];
+  const mine = requests.filter(r => r.studentId === currentUser.id).sort((a,b)=> b.dateCreated.localeCompare(a.dateCreated));
+  const box = document.getElementById('studentRequestsList');
+  box.innerHTML = '';
+  if(mine.length === 0){ box.innerHTML = '<div class="small muted">No requests</div>'; return; }
+  mine.forEach(r => {
+    box.innerHTML += `<div style="border-bottom:1px solid #eef4fb;padding:8px">
+      <div><strong>${r.subject}</strong> — ${new Date(r.dateCreated).toLocaleString()}</div>
+      <div class="small">To: ${r.facultyName} | ${r.date} | Slot: ${r.hourSlot}</div>
+      <div class="small">${r.reason}</div>
+      <div>Status: <strong>${r.status}</strong>${r.responseMessage ? (' — ' + r.responseMessage) : ''}</div>
+    </div>`;
+  });
+}
+
+/* ---------- Faculty: refresh requests targeted to this faculty ---------- */
+function refreshFacultyRequests(){
+  const requests = load(LS.REQUESTS) || [];
+  const mine = requests.filter(r => r.facultyName === currentUser.name && r.status === 'Pending').sort((a,b)=> b.dateCreated.localeCompare(a.dateCreated));
+  const box = document.getElementById('facultyRequestsBox');
+  box.innerHTML = '';
+  if(mine.length === 0){ box.innerHTML = '<div class="small muted">No pending requests</div>'; return; }
+  mine.forEach(r => {
+    const div = document.createElement('div');
+    div.style.borderBottom = '1px solid #eef4fb';
+    div.style.padding = '8px';
+    div.innerHTML = `
+      <div><strong>${r.studentName}</strong> (${r.studentId}) — ${new Date(r.dateCreated).toLocaleString()}</div>
+      <div class="small">${r.subject} | ${r.date} | Slot ${r.hourSlot}</div>
+      <div class="small">${r.reason}</div>
+      <div style="margin-top:8px">
+        <button class="ghost" onclick="handleRequest('${r.id}','Approved')">Approve</button>
+        <button class="ghost" onclick="handleRequest('${r.id}','Rejected')">Reject</button>
+      </div>
+    `;
+    box.appendChild(div);
+  });
+}
+
+/* ---------- Faculty: handle request approve/reject ---------- */
+function handleRequest(requestId, action){
+  const reqs = load(LS.REQUESTS) || [];
+  const idx = reqs.findIndex(r => r.id === requestId);
+  if(idx === -1){ alert('Request not found'); return; }
+  const r = reqs[idx];
+  if(action === 'Approved'){
+    if(!confirm('Approve request? This will update the attendance record from Absent -> Present.')) return;
+    const attendance = load(LS.ATTENDANCE) || [];
+    const aIdx = attendance.findIndex(a => a.id === r.attendanceId && a.studentId === r.studentId);
+    if(aIdx !== -1){
+      attendance[aIdx].status = 'Present';
+      attendance[aIdx].submittedAt = new Date().toISOString();
+      save(LS.ATTENDANCE, attendance);
+    }
+    reqs[idx].status = 'Approved';
+    reqs[idx].responseMessage = 'Approved by ' + currentUser.name + ' at ' + new Date().toLocaleString();
+    save(LS.REQUESTS, reqs);
+    alert('Request approved and attendance updated.');
+  } else {
+    const msg = prompt('Optional rejection message (shown to student):', 'Rejected');
+    reqs[idx].status = 'Rejected';
+    reqs[idx].responseMessage = msg || 'Rejected';
+    save(LS.REQUESTS, reqs);
+    alert('Request rejected.');
+  }
+  refreshFacultyRequests();
+}
+
+/* ---------- Export attendance ---------- */
+function exportData(){
+  const att = load(LS.ATTENDANCE) || [];
+  const blob = new Blob([JSON.stringify(att, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'attendance_export.json';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+/* ---------- On DOM ready ---------- */
+document.addEventListener('DOMContentLoaded', ()=>{
+  initDemo(); // ensure data exists
+  populateHourSlots(); // fill hour slots on load
+  showCard('loginCard'); // start on login
+});
+
+/* ---------- small utility for debugging (optional) ---------- */
+window._debug = {
+  loadAll: () => ({
+    students: load(LS.STUDENTS),
+    faculties: load(LS.FACULTIES),
+    attendance: load(LS.ATTENDANCE),
+    requests: load(LS.REQUESTS)
+  }),
+  reset: () => initDemo(true)
+};
+</script>
+</body>
+</html>
