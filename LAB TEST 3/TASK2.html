@@ -1,0 +1,327 @@
+<!--
+  Personal Portfolio - Single-file HTML
+  - Responsive, accessible portfolio with sections: Hero, About, Skills, Projects, Experience, Contact, Footer
+  - Features: dark/light theme toggle, project filtering, animated entrance, keyboard accessible, semantic markup, contact form (mailto fallback), downloadable resume link (place resume.pdf next to this file), SEO meta, Open Graph meta, structured JSON-LD
+  - How to use: save as index.html and open in a browser. Replace placeholder text, images, project links and resume.pdf with your own content.
+-->
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Poodari Srinath — Developer & Designer</title>
+  <meta name="description" content="Poodari Srinath — Full-stack developer. Portfolio showcasing projects, skills, and contact details.">
+  <meta name="author" content="Poodari Srinath">
+  <meta property="og:title" content="Poodari Srinath — Portfolio">
+  <meta property="og:description" content="Full-stack developer. Portfolio showcasing projects, skills, and contact details.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Basic styling (modern, minimal) -->
+  <style>
+    :root{
+      --bg:#0f1724; /* dark bg */
+      --card:#0b1220;
+      --muted:#94a3b8;
+      --accent:#4f46e5;
+      --glass: rgba(255,255,255,0.03);
+      --radius:14px;
+      --maxw:1100px;
+      color-scheme: dark;
+    }
+    [data-theme="light"]{
+      --bg:#f8fafc; --card:#ffffff; --muted:#475569; --accent:#0ea5a4; --glass: rgba(2,6,23,0.04); color-scheme: light;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+      background:linear-gradient(180deg,var(--bg),#071025 60%); color: #e6eef8; -webkit-font-smoothing:antialiased;
+      padding:32px; display:flex; justify-content:center; gap:24px;
+    }
+    .wrap{max-width:var(--maxw); width:100%}
+
+    header{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:28px}
+    .brand{display:flex; gap:12px; align-items:center}
+    .logo{width:44px; height:44px; border-radius:10px; background:linear-gradient(135deg,var(--accent),#7c3aed); display:grid; place-items:center; font-weight:700}
+    .brand h1{font-size:18px;margin:0}
+    nav{display:flex; gap:12px; align-items:center}
+    nav a{color:var(--muted); text-decoration:none; font-size:14px}
+    nav a:focus, nav a:hover{color:var(--accent); outline:none}
+
+    .hero{display:grid; grid-template-columns:1fr 360px; gap:28px; align-items:center; margin-bottom:28px}
+    @media (max-width:900px){.hero{grid-template-columns:1fr;}}
+
+    .card{background:var(--card); border-radius:var(--radius); padding:20px; box-shadow:0 6px 30px rgba(2,6,23,0.6);}
+
+    .intro h2{margin:0 0 6px 0; font-size:28px}
+    .intro p{margin:0 0 12px 0; color:var(--muted)}
+    .cta{display:flex; gap:10px; margin-top:12px}
+    .btn{background:linear-gradient(90deg,var(--accent),#7c3aed); border:none; color:white; padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:600}
+    .btn.secondary{background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--muted)}
+
+    .profile{display:flex; flex-direction:column; gap:12px; align-items:center}
+    .avatar{width:220px; height:220px; border-radius:14px; background:linear-gradient(135deg,#0ea5a4,#7c3aed); display:grid; place-items:center; font-size:48px}
+    .small-meta{display:flex; gap:8px; flex-wrap:wrap; justify-content:center}
+    .chip{background:var(--glass); padding:8px 10px; border-radius:999px; color:var(--muted); font-size:13px}
+
+    /* sections */
+    section{margin-bottom:20px}
+    h3{margin:0 0 12px 0}
+
+    .grid-2{display:grid; grid-template-columns:1fr 420px; gap:20px}
+    @media (max-width:900px){.grid-2{grid-template-columns:1fr}}
+
+    /* skills */
+    .skills{display:flex; gap:8px; flex-wrap:wrap}
+    .skill{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:8px 12px; border-radius:10px; color:var(--muted); font-weight:600}
+
+    /* projects */
+    .projects-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px}
+    @media (max-width:900px){.projects-grid{grid-template-columns:1fr}}
+    .project{padding:14px; border-radius:12px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));}
+    .project h4{margin:0 0 8px 0}
+    .project p{margin:0 0 10px 0; color:var(--muted)}
+    .project .meta{display:flex; gap:8px; flex-wrap:wrap}
+    .tag{font-size:12px; padding:6px 8px; border-radius:8px; background:rgba(255,255,255,0.03); color:var(--muted)}
+
+    footer{display:flex; justify-content:space-between; gap:20px; align-items:center}
+    .socials{display:flex; gap:10px}
+    .socials a{color:var(--muted); text-decoration:none}
+
+    /* small utilities */
+    .muted{color:var(--muted)}
+    .sr-only{position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden}
+
+    /* animations */
+    .fade-up{opacity:0; transform:translateY(12px); transition:opacity .45s ease, transform .45s cubic-bezier(.2,.9,.3,1)}
+    .fade-up.show{opacity:1; transform:none}
+
+    /* contact form */
+    form{display:grid; gap:10px}
+    input,textarea{width:100%; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:inherit}
+    textarea{min-height:120px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">PS</div>
+        <div>
+          <h1>Poodari Srinath</h1>
+          <div class="muted" style="font-size:13px">Full‑stack developer · Open to opportunities</div>
+        </div>
+      </div>
+      <nav aria-label="Primary navigation">
+        <a href="#projects">Projects</a>
+        <a href="#skills">Skills</a>
+        <a href="#contact">Contact</a>
+        <button class="btn" id="themeToggle" aria-pressed="false" title="Toggle theme">Toggle</button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="card intro fade-up" tabindex="0">
+          <h2>Hi — I’m Poodari Srinath.</h2>
+          <p>I build scalable web apps and delightful UIs. I focus on reliable backends, clean frontend code, and performance-minded UX. Currently exploring distributed systems and developer tooling.</p>
+
+          <div class="cta">
+            <a class="btn" href="#contact">Hire me</a>
+            <a class="btn secondary" href="./resume.pdf" download>Download Résumé</a>
+          </div>
+
+          <div style="margin-top:14px" aria-hidden="true">
+            <strong>Location:</strong> Hyderabad, India · <strong>Availability:</strong> Open to work
+          </div>
+        </div>
+
+        <aside class="card profile fade-up" tabindex="0">
+          <div class="avatar" role="img" aria-label="Portrait placeholder">PS</div>
+          <div class="small-meta">
+            <div class="chip">7+ yrs experience</div>
+            <div class="chip">MERN / Node / Python</div>
+            <div class="chip">React · Typescript</div>
+          </div>
+          <div style="margin-top:10px; text-align:center; font-size:13px; color:var(--muted)">Available for remote & onsite roles</div>
+        </aside>
+      </section>
+
+      <div class="grid-2">
+        <section class="card fade-up" id="about" tabindex="0">
+          <h3>About me</h3>
+          <p class="muted">I’m a full‑stack developer who loves turning ideas into products. I enjoy building maintainable systems, mentoring teammates, and shipping fast, well-tested features. Outside work I contribute to open-source and write technical notes.</p>
+
+          <h4 style="margin-top:16px">Quick facts</h4>
+          <ul class="muted">
+            <li>Languages: JavaScript/TypeScript, Python, SQL</li>
+            <li>Tools: Node.js, Express, React, Next.js, MongoDB, Postgres, Docker</li>
+            <li>Education: B.Tech — Computer Science</li>
+          </ul>
+        </section>
+
+        <section class="card fade-up" id="skills" tabindex="0">
+          <h3>Skills</h3>
+          <div class="skills" aria-hidden="false">
+            <div class="skill">JavaScript</div>
+            <div class="skill">TypeScript</div>
+            <div class="skill">React</div>
+            <div class="skill">Node.js</div>
+            <div class="skill">Express</div>
+            <div class="skill">REST & GraphQL</div>
+            <div class="skill">Postgres</div>
+            <div class="skill">MongoDB</div>
+            <div class="skill">Docker</div>
+            <div class="skill">AWS / GCP</div>
+          </div>
+        </section>
+      </div>
+
+      <section id="projects">
+        <h3>Selected projects</h3>
+        <div style="margin-bottom:10px" class="muted">Filter: <button class="tag" data-filter="all">All</button> <button class="tag" data-filter="web">Web</button> <button class="tag" data-filter="api">API</button> <button class="tag" data-filter="tool">Tooling</button></div>
+
+        <div class="projects-grid">
+          <article class="project card fade-up" data-type="web" tabindex="0">
+            <h4>Project Alpha</h4>
+            <p class="muted">A full-stack marketplace built with Next.js & PostgreSQL. Features real-time notifications and scalable image pipeline.</p>
+            <div class="meta"><a class="tag" href="#" aria-label="Open Project Alpha">Live</a><span class="tag">Next.js</span><span class="tag">Postgres</span></div>
+          </article>
+
+          <article class="project card fade-up" data-type="api" tabindex="0">
+            <h4>Billing API</h4>
+            <p class="muted">A robust billing & subscription API with webhooks, idempotency, and usage metering. Designed for high throughput.</p>
+            <div class="meta"><a class="tag" href="#" aria-label="Open Billing API repo">Repo</a><span class="tag">Node.js</span><span class="tag">Redis</span></div>
+          </article>
+
+          <article class="project card fade-up" data-type="tool" tabindex="0">
+            <h4>DevTool CLI</h4>
+            <p class="muted">A developer CLI to scaffold microservices, generate CI pipelines, and manage secrets. Saves setup time for teams.</p>
+            <div class="meta"><a class="tag" href="#">GitHub</a><span class="tag">TypeScript</span></div>
+          </article>
+
+          <article class="project card fade-up" data-type="web" tabindex="0">
+            <h4>Portfolio CMS</h4>
+            <p class="muted">A lightweight CMS to manage content for this portfolio. Headless approach with markdown support and image optimization.</p>
+            <div class="meta"><a class="tag" href="#">Demo</a><span class="tag">Express</span><span class="tag">MongoDB</span></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="card fade-up" id="experience" tabindex="0">
+        <h3>Experience</h3>
+        <div class="muted">
+          <strong>Senior Software Engineer</strong> — Acme Corp · 2022 — Present<br>
+          <small>Worked on payment infra and performance improvements reducing latency by 35%.</small>
+        </div>
+        <div style="margin-top:8px" class="muted">
+          <strong>Software Engineer</strong> — BrightApps · 2018 — 2022<br>
+          <small>Built core product features and led a small cross-functional team.</small>
+        </div>
+      </section>
+
+      <section class="card fade-up" id="contact" tabindex="0">
+        <h3>Contact</h3>
+        <p class="muted">I’m available for freelance and full-time roles. Send a message or reach me via email.</p>
+
+        <form id="contactForm" action="mailto:you@example.com" method="post" enctype="text/plain" onsubmit="return handleSubmit(event)">
+          <label class="sr-only" for="name">Name</label>
+          <input id="name" name="name" placeholder="Your name" required>
+
+          <label class="sr-only" for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="you@domain.com" required>
+
+          <label class="sr-only" for="message">Message</label>
+          <textarea id="message" name="message" placeholder="How can I help?" required></textarea>
+
+          <div style="display:flex; gap:10px; align-items:center">
+            <button class="btn" type="submit">Send</button>
+            <div class="muted" style="font-size:13px">Or email me at <a href="mailto:you@example.com">you@example.com</a></div>
+          </div>
+        </form>
+      </section>
+
+      <footer class="muted">
+        <div>© <span id="year"></span> Poodari Srinath — Built with ❤️</div>
+        <div class="socials">
+          <a href="#" aria-label="GitHub">GitHub</a>
+          <a href="#" aria-label="LinkedIn">LinkedIn</a>
+          <a href="#" aria-label="Twitter">Twitter</a>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // progressive animations: reveal on load/scroll
+    function reveal(){
+      document.querySelectorAll('.fade-up').forEach((el,i)=>{
+        setTimeout(()=> el.classList.add('show'), 80*i)
+      })
+    }
+    reveal();
+
+    // theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const root = document.documentElement;
+    // load saved
+    const saved = localStorage.getItem('theme');
+    if(saved === 'light') root.setAttribute('data-theme','light');
+    function toggleTheme(){
+      const isLight = root.getAttribute('data-theme') === 'light';
+      if(isLight){ root.removeAttribute('data-theme'); themeToggle.setAttribute('aria-pressed','false'); localStorage.removeItem('theme'); }
+      else{ root.setAttribute('data-theme','light'); themeToggle.setAttribute('aria-pressed','true'); localStorage.setItem('theme','light'); }
+    }
+    themeToggle.addEventListener('click', toggleTheme);
+
+    // project filtering
+    document.querySelectorAll('[data-filter]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const f = btn.getAttribute('data-filter');
+        document.querySelectorAll('.project').forEach(p=>{
+          p.style.display = (f==='all' || p.getAttribute('data-type')===f) ? '' : 'none';
+        })
+      })
+    })
+
+    // contact form: use mailto fallback but provide better UX
+    function handleSubmit(e){
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const message = document.getElementById('message').value.trim();
+      if(!name || !email || !message) return alert('Please complete all fields.');
+      const subject = encodeURIComponent('Portfolio contact from ' + name);
+      const body = encodeURIComponent('Name: '+name+'\nEmail: '+email+'\n\n'+message);
+      // open mail client
+      window.location.href = `mailto:you@example.com?subject=${subject}&body=${body}`;
+      return false;
+    }
+
+    // accessibility: keyboard shortcuts
+    document.addEventListener('keydown', (e)=>{
+      if(e.altKey && e.key.toLowerCase() === 'k'){
+        document.getElementById('contactForm').querySelector('input').focus();
+      }
+    })
+
+    // set year
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+
+  <!-- Structured data for SEO -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Poodari Srinath",
+    "url": "https://your-portfolio.example.com",
+    "sameAs": ["https://github.com/yourhandle","https://linkedin.com/in/yourhandle"],
+    "jobTitle": "Full-stack Developer",
+    "description": "Full-stack developer specializing in web applications and developer tooling."
+  }
+  </script>
+</body>
+</html>
